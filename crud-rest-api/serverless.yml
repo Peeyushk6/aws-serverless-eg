@@ -1,0 +1,141 @@
+service: serverless-rest-api
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: arn:aws:dynamodb:us-east-1:*:*
+
+resources:
+  Resources:
+    ProductTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: productId
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: productId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: 'product-inventory-serverless-updated'
+
+functions:
+  create:
+    handler: src/handler/crud.crud
+    events:
+      - http:
+          path: product
+          method: post
+          cors: true
+  list:
+    handler: src/handler/crud.crud
+    events:
+      - http:
+          path: products
+          method: get
+          cors: true
+  get:
+    handler: src/handler/crud.crud
+    events:
+      - http:
+          path: product
+          method: get
+          cors: true
+
+  update:
+    handler: src/handler/crud.crud
+    events:
+      - http:
+          path: product
+          method: patch
+          cors: true
+  delete:
+    handler: src/handler/crud.crud
+    events:
+      - http:
+          path: product
+          method: delete
+          cors: true
+# service: serverless-rest-api
+
+# provider:
+#   name: aws
+#   runtime: nodejs12.x
+#   region: us-east-1
+#   iamRoleStatements:
+#     - Effect: Allow
+#       Action:
+#         - dynamodb:DescribeTable
+#         - dynamodb:Query
+#         - dynamodb:Scan
+#         - dynamodb:GetItem
+#         - dynamodb:PutItem
+#         - dynamodb:UpdateItem
+#         - dynamodb:DeleteItem
+#       Resource: arn:aws:dynamodb:us-east-1:*:*
+
+# resources:
+#   Resources:
+#     ProductTable:
+#       Type: 'AWS::DynamoDB::Table'
+#       DeletionPolicy: Retain
+#       Properties:
+#         AttributeDefinitions:
+#           -
+#             AttributeName: productId
+#             AttributeType: S
+#         KeySchema:
+#           -
+#             AttributeName: productId
+#             KeyType: HASH
+#         ProvisionedThroughput:
+#           ReadCapacityUnits: 1
+#           WriteCapacityUnits: 1
+#         TableName: 'product-inventory-serverless'
+
+# functions:
+#   crud-operations:
+#     handler: src/handler/crud.crud
+#     events:
+#       - http:
+#           path: product
+#           method: post
+#           cors: true
+
+#       - http:
+#           path: products
+#           method: get
+#           cors: true
+
+#       - http:
+#           path: product
+#           method: get
+#           cors: true
+
+#       - http:
+#           path: product
+#           method: put
+#           cors: true
+
+#       - http:
+#           path: product
+#           method: delete
+#           cors: true
+
+
