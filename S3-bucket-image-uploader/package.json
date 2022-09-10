@@ -1,0 +1,19 @@
+{
+  "name": "s3-bucket-image-uploader",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1206.0",
+    "serverless": "^3.22.0"
+  },
+  "devDependencies": {
+    "serverless-iam-roles-per-function": "^3.2.0"
+  }
+}
