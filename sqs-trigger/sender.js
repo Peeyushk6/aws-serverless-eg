@@ -1,36 +1,33 @@
 const AWS = require('aws-sdk');
-const sqs = new AWS.SQS({
+const Responses = require('./API_Responses')
+const SQS = new AWS.SQS({
     region: 'us-east-1'
 });
 const SES = new AWS.SES();
 exports.handler = function (event, context, callback) {
     const accountId = '359139714381';
-    const queueUrl = 'https://sqs.us-east-1.amazonaws.com/' + accountId + '/MyQueue';
+    const queueUrl = 'https://SQS.us-east-1.amazonaws.com/' + accountId + '/MyQueue';
 
     let params = {
         MessageBody: event.body,
         QueueUrl: queueUrl
     };
-    sqs.sendMessage(params, function (err, data) {
+    SQS.sendMessage(params, function (err, data) {
         if (err) {
-            console.log("test10")
-            console.log('error:', "failed to send message" + err);
-            let responseBody = {
-                message: 'failed to send message'
-            };
-            let response = {
-                statusCode: 500,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(responseBody)
-            };
-
+            let response = Responses._400({
+                message: 'failed to send message',
+            })
             callback(null, response);
-        } else {
+        }
+        else {
             try {
-                console.log("test1")
                 const { to, from, subject, text } = JSON.parse(event.body);
+                if (!to || !from || !subject || !text) {
+                    let response = Responses._400({
+                        message: 'to, from, subject and text are all required in the body',
+                    })
+                    callback(null, response);
+                }
                 const param = {
                     Destination: {
                         ToAddresses: [to],
@@ -43,63 +40,36 @@ exports.handler = function (event, context, callback) {
                     },
                     Source: from,
                 };
-                console.log("test2")
 
                 SES.sendEmail(param, (err, data) => {
                     if (err) {
-                        console.log("test3")
-                        let response = {
-                            statusCode: 401,
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(err)
-                        };
+                        let response = Responses._400({ message: 'Enter registered mail id ', })
                         callback(null, response);
                     }
                     else {
-                        console.log("test4")
-                        let paramss = {
-                            QueueUrl: queueUrl,
-                        };
-
-                        sqs.receiveMessage(paramss, (err, data) => {
-                            console.log("test5")
+                        let paramss = { QueueUrl: queueUrl, };
+                        SQS.receiveMessage(paramss, (err, data) => {
                             if (err) {
-                                console.log("test6")
-                                console.log(err);
-                                let response = {
-                                    statusCode: 401,
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify(err)
-                                };
+                                reponse = Responses._400({
+                                    message: 'Message failed to recieved',
+                                })
                                 callback(null, response);
-
-                            } else {
-                                console.log("test7")
-                                let responseBodyv = {
+                            }
+                            else {
+                                response = Responses._200({
                                     message: data,
                                     details: JSON.parse(event.body)
-                                };
-
-                                let response = {
-                                    statusCode: 200,
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify(responseBodyv)
-                                };
+                                })
                                 callback(null, response);
                             }
                         })
                     }
                 })
             } catch (error) {
-                console.log("test8")
-                console.log('error sending email ', error);
-                return Responses._400({ message: 'The email failed to send' });
+                reponse = Responses._400({
+                    message: 'The email failed to send',
+                })
+                callback(null, response);
             }
         }
     });
