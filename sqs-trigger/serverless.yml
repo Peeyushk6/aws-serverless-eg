@@ -1,0 +1,71 @@
+service: sqs-triggers-demo
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sqs:SendMessage"
+        - "sqs:GetQueueUrl"
+      Resource: "arn:aws:sqs:${self:provider.region}:359139714381:MyQueue"
+    - Effect: "Allow"
+      Action:
+        - "sqs:ListQueues"
+      Resource: "arn:aws:sqs:${self:provider.region}:359139714381:*"
+    - Effect: "Allow"
+      Action:
+        - "ses:*"
+      Resource: '*'
+
+
+package:
+    individually: true
+
+functions:
+  sender:
+    handler: sender.handler
+    events:
+      - http:
+          path: v1/sender
+          method: post
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - MyQueue
+              - Arn
+
+
+
+resources:
+  Resources:
+    MyQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "MyQueue"
+    
+    myAssumeRole:
+            Type: AWS::IAM::Role
+            Properties:
+                RoleName: myAssumeRoleforsqs
+                AssumeRolePolicyDocument:
+                    Version: '2012-10-17'
+                    Statement:
+                        - Effect: Allow
+                          Principal:
+                              Service:
+                                  - lambda.amazonaws.com
+                                  - apigateway.amazonaws.com
+                          Action:
+                              - sts:AssumeRole
+
+
+
+
+
+
+
+
+
+
